@@ -416,7 +416,7 @@ void BatteryMonitor::logValues(void) {
              props.chargerAcOnline ? "a" : "", props.chargerUsbOnline ? "u" : "",
              props.chargerWirelessOnline ? "w" : "");
 
-    KLOG_WARNING(LOG_TAG, "%s\n", dmesgline);
+    //KLOG_WARNING(LOG_TAG, "%s\n", dmesgline);
 }
 
 bool BatteryMonitor::isChargerOnline() {
