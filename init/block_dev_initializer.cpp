@@ -31,6 +31,7 @@ using namespace std::chrono_literals;
 
 BlockDevInitializer::BlockDevInitializer() : uevent_listener_(16 * 1024 * 1024) {
     auto boot_devices = android::fs_mgr::GetBootDevices();
+    boot_devices_ = boot_devices;
     device_handler_ = std::make_unique<DeviceHandler>(
             std::vector<Permissions>{}, std::vector<SysfsPermissions>{}, std::vector<Subsystem>{},
             std::move(boot_devices), false);
@@ -66,6 +67,22 @@ ListenerAction BlockDevInitializer::HandleUevent(const Uevent& uevent,
     // Ignore everything that is not a block device.
     if (uevent.subsystem != "block") {
         return ListenerAction::kContinue;
+    }
+
+    // andr36oid: a named partition only counts on the disk Android started from. Consoles
+    // with andr36oid on both the SD card and the built-in eMMC have two "system" and two
+    // "vendor"; the first one seen used to win, and the other disk's was never set up.
+    if (!uevent.partition_name.empty() && !boot_devices_.empty()) {
+        bool on_boot_device = false;
+        for (const auto& dev : boot_devices_) {
+            if (uevent.path.find("/" + dev + "/") != std::string::npos) {
+                on_boot_device = true;
+                break;
+            }
+        }
+        if (!on_boot_device) {
+            return ListenerAction::kContinue;
+        }
     }
 
     auto name = uevent.partition_name;

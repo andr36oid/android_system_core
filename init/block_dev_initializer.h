@@ -34,6 +34,8 @@ class BlockDevInitializer final {
     ListenerAction HandleUevent(const Uevent& uevent, std::set<std::string>* devices);
 
     std::unique_ptr<DeviceHandler> device_handler_;
+    // androidboot.boot_devices: where the partitions to wait for must be (andr36oid)
+    std::set<std::string> boot_devices_;
     UeventListener uevent_listener_;
 };
 
