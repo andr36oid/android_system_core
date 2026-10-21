@@ -683,8 +683,13 @@ static int prepare_fs_for_mount(const std::string& blk_device, const FstabEntry&
         }
     }
 
+    // andr36oid: a read-only mount without "check" is never checked: the check mounts
+    // read-write first, which wrote vendor's superblock on every start (its state flag
+    // stays "not clean" once lost, and no e2fsck in the first stage fixes it), so a copy
+    // of vendor (the eMMC installer) never read back the same after a start
     if (entry.fs_mgr_flags.check ||
-        (fs_stat & (FS_STAT_UNCLEAN_SHUTDOWN | FS_STAT_QUOTA_ENABLED))) {
+        (!(entry.flags & MS_RDONLY) &&
+         (fs_stat & (FS_STAT_UNCLEAN_SHUTDOWN | FS_STAT_QUOTA_ENABLED)))) {
         check_fs(blk_device, entry.fs_type, entry.mount_point, &fs_stat);
     }
 
